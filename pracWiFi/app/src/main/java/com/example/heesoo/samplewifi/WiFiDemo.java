@@ -38,6 +38,7 @@ public class WiFiDemo extends Activity implements OnClickListener {
     TextView textStatus;
     TextView gpsStatus;
     TextView gpsDistance;
+    TextView wifiCount;
     Button btnScanStart;
     Button btnScanStop;
 
@@ -45,6 +46,8 @@ public class WiFiDemo extends Activity implements OnClickListener {
     String text = "";
 
     private List<ScanResult> mScanResult; //스캔 결과 저장할 리스트
+    private List<ScanResult> prevResult;
+    private List<ScanResult> currentResult;
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -59,8 +62,41 @@ public class WiFiDemo extends Activity implements OnClickListener {
         }
     };
 
+    public void changedWiFiCount(List<ScanResult> prev, List<ScanResult> current){
+        Log.i(TAG,"changedWiFiCount()");
+        int count=0;
+        if(prev==null){
+            return;
+        }
+        for(int i=0;i<prev.size();i++){// 과거 값이 현재에 존재하는 지 확인
+            for(int j=0;j<current.size();j++){
+                if(prev.get(i).SSID.equals(current.get(j).SSID)){//같은 게 있으면 break
+                    break;
+                }
+                if(j==current.size()-1){//마지막까지 돌았는 데도 같은게 없으면 count++
+                    count++;
+                }
+            }
+        }
+        wifiCount.setText(minute+"분 WiFi "+count+"개 변경됨(prev:"+prev.size()+"개,current:"+current.size()+"개)");
+    }
+    public void setPrevCurrent(){
+        Log.i(TAG,"setPrevCurrent()");
+        Log.i(TAG,minute+"분");
+        if(minute==0){//맨 처음에 리스트 받아올 때
+            currentResult=wifimanager.getScanResults();
+            if(currentResult==null){
+                Log.i(TAG,"current가 널이요ㅠㅠㅠ");
+            }
+        }
+        else if(minute>0){//1분마다 prev와 current 리스트를 비교하기 위해 설정
+            prevResult=currentResult;
+            currentResult=mScanResult;
+        }
+    }
     public void getWIFIScanResult() {
         mScanResult = wifimanager.getScanResults(); // ScanResult
+
         // Scan count
         textStatus.setText("Scan count is \t" + ++scanCount + " times \n");
 
@@ -98,6 +134,7 @@ public class WiFiDemo extends Activity implements OnClickListener {
         textStatus = (TextView) findViewById(R.id.textStatus);
         gpsStatus=(TextView)findViewById(R.id.GPS);
         gpsDistance=(TextView)findViewById(R.id.GPSdistance);
+        wifiCount=(TextView)findViewById(R.id.WiFiCount);
         btnScanStart = (Button) findViewById(R.id.btnScanStart);
         btnScanStop = (Button) findViewById(R.id.btnScanStop);
 
@@ -117,8 +154,6 @@ public class WiFiDemo extends Activity implements OnClickListener {
 
         //위치 권한 요청
         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-
-        checkGPS();
         getMyLocation();
     }
 
@@ -188,6 +223,8 @@ public class WiFiDemo extends Activity implements OnClickListener {
             accuracy = location.getAccuracy();
             provider = location.getProvider();
             gpsStatus.setText("현재 위치 " + minute + "분 lat: " + latitude + " lng: " + longitude + " alt: " + altitude + " acc: " + accuracy + " pro: " + provider);
+            setPrevCurrent();//1분마다 와이파이 prev와 current 갱신
+            changedWiFiCount(prevResult,currentResult);//몇 개 달라졌는 지 비교
             if (prev == null) {
                 prev = location;
             } else {
