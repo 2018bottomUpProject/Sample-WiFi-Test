@@ -2,8 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.heesoo.samplewifi">
 
-
-    <!--WiFi, GPS 접근,변경 허용-->
+    <!-- WiFi, GPS 접근,변경 허용 -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -24,10 +23,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!--WiFiDemo 클래스 추가-->
-        <activity android:name=".WiFiDemo">
-        </activity>
-    </application>
+        <!-- WiFiDemo 클래스 추가 -->
+        <activity android:name=".WiFiDemo" />
 
+        <!--BackGround에서 사용-->
+        <service
+            android:name=".BackgroundService"
+            android:enabled="true"
+            android:exported="true"></service>
+    </application>
 
 </manifest>

@@ -18,5 +18,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent=new Intent(ctx,WiFiDemo.class);
         startActivity(intent);
 
+        //백그라운드 실행
+        Intent intent2=new Intent(getApplicationContext(), BackgroundService.class);
+        startService(intent2);
     }
 }

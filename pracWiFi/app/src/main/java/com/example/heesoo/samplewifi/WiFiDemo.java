@@ -8,12 +8,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -21,15 +25,19 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 
 public class WiFiDemo extends Activity implements OnClickListener {
 
     private static final String TAG = "WIFIScanner";
-
     WifiManager wifimanager;
+    int minute = -1;
 
     //UI
     TextView textStatus;
+    TextView gpsStatus;
+    TextView gpsDistance;
     Button btnScanStart;
     Button btnScanStop;
 
@@ -77,7 +85,9 @@ public class WiFiDemo extends Activity implements OnClickListener {
         Log.d(TAG, "initWIFIScan()");
     }
 
-    /** Called when the activity is first created. */
+    /**
+     * Called when the activity is first created.
+     */
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,6 +96,8 @@ public class WiFiDemo extends Activity implements OnClickListener {
 
         //UI 설정
         textStatus = (TextView) findViewById(R.id.textStatus);
+        gpsStatus=(TextView)findViewById(R.id.GPS);
+        gpsDistance=(TextView)findViewById(R.id.GPSdistance);
         btnScanStart = (Button) findViewById(R.id.btnScanStart);
         btnScanStop = (Button) findViewById(R.id.btnScanStop);
 
@@ -106,14 +118,18 @@ public class WiFiDemo extends Activity implements OnClickListener {
         //위치 권한 요청
         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
 
+        checkGPS();
+        getMyLocation();
+    }
+
+    public void checkGPS() {
         //GPS가 꺼져있는지 확인
-        LocationManager locationManager=(LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         //꺼져있으면 켜달라는 Text 출력
-        if(!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+        if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             textStatus.append("GPS가 꺼져있습니다, 켜주세요!");
         }
-
     }
 
     public void printToast(String messageToast) {//toast 생성 및 출력
@@ -135,4 +151,65 @@ public class WiFiDemo extends Activity implements OnClickListener {
         }
     }
 
+    public void getMyLocation() {// 내 위치 받아오는 메소드
+        Log.i(TAG, "getMyLocation()");
+        checkGPS();
+        GPSListener gpsListener = new GPSListener();
+        LocationManager locationmanager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        // GPS 제공자의 정보가 바뀌면 콜백하도록 리스너 등록
+        // 5분마다 GPS 정보 가져오기<<<<<지금은 테스트를 위해 1분(60000)으로 설정, GPS로 받는 것은 삭제해둠, minTime은 빠르거나 느릴 수 있음
+        locationmanager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 60000, 0, gpsListener);
+    }
+
+    private class GPSListener implements LocationListener {
+        double latitude, longitude, altitude;
+        float accuracy;
+        String provider;
+        Location prev = null;
+
+        public void onLocationChanged(Location location) {
+            Log.i(TAG,"onLocationChanged()");
+            minute++;
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            altitude = location.getAltitude();
+            accuracy = location.getAccuracy();
+            provider = location.getProvider();
+            gpsStatus.setText("현재 위치 " + minute + "분 lat: " + latitude + " lng: " + longitude + " alt: " + altitude + " acc: " + accuracy + " pro: " + provider);
+            if (prev == null) {
+                prev = location;
+            } else {
+                double distance = prev.distanceTo(location);
+                gpsDistance.setText("distance: " + distance+"m");
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
+        }
+
+    }
 }

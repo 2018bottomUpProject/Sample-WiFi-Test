@@ -4,6 +4,14 @@
     android:layout_width="match_parent">
     <TextView android:layout_width="fill_parent"
         android:layout_height="wrap_content" android:text="WiFiScannerDemo" />
+    <TextView android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:text="========================" />
+    <TextView android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:id="@+id/GPS" />
+    <TextView android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:text="========================" />
+    <TextView android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:id="@+id/GPSdistance" />
     <TableLayout android:layout_height="wrap_content"
         android:id="@+id/tableLayout1" android:layout_width="match_parent">
         <TableRow>
